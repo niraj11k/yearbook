@@ -1,6 +1,9 @@
 # dependencies
 web/node_modules
 
+# supabase
+supabase/schema.sql
+
 # build
 web/dist
 
