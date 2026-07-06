@@ -1,7 +1,14 @@
-node_modules
-dist
-.DS_Store
-.env
+# dependencies
+web/node_modules
 
+# build
+web/dist
+
+# OS
+.DS_Store
+
+# secrets
+.env
 .env.local
-schema.sql
+web/.env
+web/.env.local
