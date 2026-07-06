@@ -17,14 +17,13 @@ the architecture doc (Supabase + Cloudflare Pages, RLS as the security layer).
 
 ```
 yearbook/
-├── App.jsx                ← the whole site: one React component (also opens as a live preview)
-├── web/                   ← deployable Vite project wrapping that component
+├── web/                   ← deployable Vite project
 │   ├── index.html         ← loads Tailwind + mounts the app
 │   ├── package.json
 │   ├── vite.config.js
 │   └── src/
 │       ├── main.jsx
-│       └── App.jsx        ← same component (this is the file you edit)
+│       └── App.jsx        ← the whole site: one React component
 ├── supabase/
 │   └── schema.sql         ← tables, triggers, RLS policies, storage, realtime
 └── README.md
@@ -523,7 +522,7 @@ never notices.
 - **Schema / Storage changes:** edit `supabase/schema.sql`, re-run in the
   SQL Editor (idempotent).
 - **New admin:** run the admin SQL snippet with their email.
-- **Switch back to demo:** clear both Supabase constants in `App.jsx` and
+- **Switch back to demo:** clear both Supabase constants in `web/src/App.jsx` and
   restart dev — useful for UI experiments without touching live data.
 
   **SQL Query to add multiple admins**
