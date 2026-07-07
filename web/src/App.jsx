@@ -268,7 +268,7 @@ const fieldInputCls =
 const fieldTextareaCls =
   "w-full px-4 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-900 placeholder-zinc-400 resize-y focus:outline-none focus:ring-2 focus:ring-emerald-600/60 focus:border-emerald-600 transition-shadow";
 
-function ProfileInput({ label, k, type = "text", placeholder = "", full = false, form, setF }) {
+function ProfileInput({ label, k, type = "text", placeholder = "", full = false, required = false, form, setF }) {
   return (
     <label className={`block ${full ? "sm:col-span-2" : ""}`}>
       <span className="block text-[13px] font-medium text-zinc-500 mb-1.5">{label}</span>
@@ -277,6 +277,7 @@ function ProfileInput({ label, k, type = "text", placeholder = "", full = false,
         value={form[k] ?? ""}
         onChange={setF(k)}
         placeholder={placeholder}
+        required={required}
         className={fieldInputCls}
       />
     </label>
@@ -565,7 +566,11 @@ export default function App() {
   }, [me, notify]);
 
   /* ---------- derived ---------- */
+  const myProfile = me ? profiles.find((p) => p.id === me.id) : null;
+  const hasSavedProfile = !!(myProfile && (myProfile.display_name || "").trim());
+
   const visible = profiles
+    .filter((p) => (p.display_name || "").trim())
     .filter((p) => !p.is_hidden || isAdmin || (me && p.id === me.id))
     .filter((p) => {
       if (!query) return true;
@@ -603,7 +608,9 @@ export default function App() {
         setPhotoRemoved(false);
       }
       setAuthState("idle");
-      notify("Signed in. Your profile is ready to edit.");
+      notify(mine?.display_name?.trim()
+        ? "Signed in. Your profile is ready to edit."
+        : "Signed in. Fill in your details below.");
       scrollTo(editRef);
       return;
     }
@@ -622,6 +629,10 @@ export default function App() {
   const saveProfile = async (e) => {
     e.preventDefault();
     if (!me) { scrollTo(editRef); return; }
+    if (!(form.display_name || "").trim()) {
+      notify("Please add your name before saving.");
+      return;
+    }
     setSaveState("saving");
     let photo_path = form.photo_path;
     let photo_preview = form.photo_preview;
@@ -793,7 +804,7 @@ export default function App() {
             <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button onClick={() => scrollTo(editRef)}
                 className="group inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-emerald-700/20 hover:bg-emerald-800 hover:-translate-y-0.5 transition-all">
-                {me ? "Update my profile" : "Add my details"}
+                {me && hasSavedProfile ? "Update my profile" : "Add my details"}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
               </button>
               <button onClick={() => scrollTo(bookRef)}
@@ -930,7 +941,7 @@ export default function App() {
                   setPhotoRemoved={setPhotoRemoved}
                   onError={notify}
                 />
-                <ProfileInput label="Name" k="display_name" placeholder="Your full name" form={form} setF={setF} />
+                <ProfileInput label="Name" k="display_name" placeholder="Your full name" form={form} setF={setF} required />
                 <ProfileInput label="Nick name" k="nickname" placeholder='What we actually called you' form={form} setF={setF} />
                 <div className="block">
                   <span className="block text-[13px] font-medium text-zinc-500 mb-1.5">Year</span>
@@ -1012,7 +1023,7 @@ export default function App() {
           </Reveal>
           <div className="mt-10 grid gap-5 sm:grid-cols-3">
             {[
-              { icon: Users, n: profiles.filter((p) => !p.is_hidden).length, label: "Classmates found", sub: "and counting — send the link around" },
+              { icon: Users, n: profiles.filter((p) => !p.is_hidden && (p.display_name || "").trim()).length, label: "Classmates found", sub: "and counting — send the link around" },
               { icon: Heart, n: allMemories.length, label: "Memories written down", sub: "before we forget the details" },
               { icon: BookOpen, n: completed, label: "Profiles completed", sub: "name, story and all" },
             ].map((s, i) => (
