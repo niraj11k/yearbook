@@ -75,25 +75,12 @@ alter table public.profiles drop column if exists show_address;
 alter table public.profiles drop column if exists current_address;
 
 -- ------------------------------------------------------------
--- 2. AUTO-CREATE A PROFILE WHEN A USER SIGNS UP
+-- 2. PROFILES ON FIRST SAVE (not on sign-up)
+--    Rows are created when the user clicks Save my details in the app.
+--    Safe to re-run: drops the legacy auto-create trigger if present.
 -- ------------------------------------------------------------
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-  insert into public.profiles (id, display_name)
-  values (new.id, '')
-  on conflict (id) do nothing;
-  return new;
-end;
-$$;
-
 drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
+drop function if exists public.handle_new_user();
 
 -- ------------------------------------------------------------
 -- 3. KEEP updated_at FRESH
@@ -132,7 +119,8 @@ as $$
   );
 $$;
 
--- READ: signed-in users can see profiles that are not hidden.
+-- READ: signed-in users can see completed profiles that are not hidden.
+-- Empty rows (no display name yet) stay private until first save.
 -- Admins can see everything. Owners can always see their own row
 -- (so a hidden user can still edit their profile).
 drop policy if exists "read visible profiles" on public.profiles;
@@ -141,7 +129,7 @@ create policy "read visible profiles"
   for select
   to authenticated
   using (
-    is_hidden = false
+    (is_hidden = false and trim(display_name) <> '')
     or id = auth.uid()
     or public.is_admin()
   );
