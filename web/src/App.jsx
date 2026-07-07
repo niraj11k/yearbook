@@ -920,7 +920,7 @@ export default function App() {
                     {authState === "sent" ? "Link sent" : DEMO ? "Sign in" : "Send link"}
                   </button>
                 </div>
-                {authState === "sent" && <p className="mt-3 text-[13px] text-emerald-700 font-medium">Check your inbox — the link signs you straight in.</p>}
+                {authState === "sent" && <p className="mt-3 text-[13.5px] text-emerald-700 font-medium leading-relaxed">Check your inbox — the link signs you straight in. If it's not there, check your spam or junk folder too.</p>}
               </form>
             )}
             {me && (
