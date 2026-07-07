@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Lock, Shield, Search, GraduationCap, Pencil, X, Check, Loader2,
+  Lock, Search, GraduationCap, Pencil, X, Check, Loader2,
   Quote, Users, BookOpen, Heart, Mail, ArrowRight, Eye, EyeOff, Sparkles,
-  Camera, Trash2, ExternalLink,
+  Camera, Trash2, ExternalLink, Music, Star,
 } from "lucide-react";
 
 /* ============================================================
@@ -13,6 +13,7 @@ const SUPABASE_URL = "https://dnkofdwufldtzimnpico.supabase.co";      // e.g. "h
 const SUPABASE_ANON_KEY = "sb_publishable_6tOVr-07PhQinX_XleOWbQ_iGJE8Eav"; // public anon key — RLS protects the data
 const DEMO = !(SUPABASE_URL && SUPABASE_ANON_KEY);
 const CLASS_YEAR = "2002";
+const SITE_NAME = "SVM Yearbook";
 const PHOTO_BUCKET = "profile-photos";
 const PHOTO_MAX_BYTES = 2 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -181,6 +182,17 @@ const Reveal = ({ children, delay = 0, className = "" }) => {
 
 const initialsOf = (n) => (n || "?").trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || "").join("");
 
+const cardQuote = (p) => p.embarrassing_moment || p.message_younger_self || p.secret_talent || p.iconic_trend;
+
+const BOLLYWOOD_CARD_ACCENTS = [
+  "from-rose-500 via-fuchsia-500 to-amber-400",
+  "from-orange-500 via-rose-500 to-purple-500",
+  "from-amber-500 via-rose-600 to-fuchsia-500",
+  "from-purple-600 via-rose-500 to-orange-400",
+  "from-fuchsia-600 via-amber-500 to-rose-500",
+  "from-rose-600 via-purple-500 to-amber-400",
+];
+
 const SOCIAL_FIELDS = [
   { k: "linkedin", label: "LinkedIn", placeholder: "linkedin.com/in/you" },
   { k: "instagram", label: "Instagram", placeholder: "instagram.com/you" },
@@ -288,21 +300,108 @@ function ProfileMemory({ label, k, placeholder = "A moment worth keeping…", fo
 }
 
 function ProfileAvatar({ profile, size = "md", className = "" }) {
-  const sz = { sm: "h-12 w-12 text-base", md: "h-14 w-14 text-lg" };
+  const sz = { sm: "h-12 w-12 text-base", md: "h-14 w-14 text-lg", lg: "h-[4.5rem] w-[4.5rem] text-xl" };
   const src = profile.photo_preview || photoPublicUrl(profile.photo_path);
   if (src) {
     return (
       <img
         src={src}
         alt=""
-        className={`${sz[size]} shrink-0 rounded-full object-cover ${className}`}
+        className={`${sz[size]} shrink-0 rounded-full object-cover ring-[3px] ring-amber-200/80 shadow-lg shadow-rose-200/50 ${className}`}
       />
     );
   }
   return (
-    <span className={`grid ${sz[size]} shrink-0 place-items-center rounded-full bg-gradient-to-br from-emerald-600 to-teal-500 text-white font-semibold ${className}`}>
+    <span className={`grid ${sz[size]} shrink-0 place-items-center rounded-full bg-gradient-to-br from-rose-600 via-fuchsia-600 to-amber-500 text-white font-bold shadow-lg shadow-rose-300/40 ring-[3px] ring-amber-200/80 ${className}`}>
       {initialsOf(profile.display_name)}
     </span>
+  );
+}
+
+function ProfileCard({ profile, index, onSelect, pulseId, classYear }) {
+  const quote = cardQuote(profile);
+  const accent = BOLLYWOOD_CARD_ACCENTS[index % BOLLYWOOD_CARD_ACCENTS.length];
+
+  return (
+    <button
+      onClick={() => onSelect(profile)}
+      className={`bollywood-card group relative w-full overflow-hidden rounded-3xl p-7 sm:p-8 text-left transition-all duration-500 ease-out
+                  hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-rose-300/30
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/60
+                  ${profile.is_hidden ? "opacity-70" : ""}
+                  ${pulseId === profile.id ? "pulse-live" : ""}`}
+      style={{ animationDelay: `${(index % 6) * 0.4}s` }}
+    >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-3 rounded-t-3xl bg-[repeating-linear-gradient(90deg,#3f1020_0px,#3f1020_10px,transparent_10px,transparent_18px)] opacity-[0.18]" />
+      <Star size={14} className="bollywood-sparkle absolute right-5 top-5 text-amber-400 fill-amber-400/30" style={{ animationDelay: "0s" }} />
+      <Star size={10} className="bollywood-sparkle absolute right-12 top-10 text-rose-400 fill-rose-400/20" style={{ animationDelay: "0.8s" }} />
+      <Star size={8} className="bollywood-sparkle absolute left-6 top-8 text-fuchsia-400 fill-fuchsia-400/20" style={{ animationDelay: "1.4s" }} />
+
+      <div className={`pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br ${accent} opacity-[0.12] blur-2xl transition-opacity duration-500 group-hover:opacity-25`} />
+
+      <div className="relative flex items-start gap-5">
+        <div className="relative shrink-0">
+          <ProfileAvatar profile={profile} size="lg" className="bollywood-avatar transition-transform duration-500 group-hover:scale-105" />
+          <span className={`absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br ${accent} text-white shadow-md`}>
+            <Star size={12} className="fill-white/30" />
+          </span>
+        </div>
+        <div className="min-w-0 flex-1 pt-1">
+          <p className="bollywood-name text-xl sm:text-[1.35rem] font-bold leading-tight tracking-tight text-zinc-900 truncate">
+            {profile.display_name || "Unnamed"}
+          </p>
+          {profile.nickname && (
+            <p className="mt-1 text-[15px] font-medium text-rose-600 truncate">"{profile.nickname}"</p>
+          )}
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            <span className={`inline-flex items-center rounded-full bg-gradient-to-r ${accent} px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm`}>
+              Class of {classYear}
+            </span>
+            {profile.occupation && (
+              <span className="text-[13px] font-medium text-zinc-600 truncate">{profile.occupation}</span>
+            )}
+          </div>
+          {profile.current_city && (
+            <p className="mt-1 text-[13px] text-zinc-500">{profile.current_city}</p>
+          )}
+        </div>
+      </div>
+
+      {(quote || profile.fav_teacher || profile.school_song) && (
+        <div className="relative mt-6 rounded-2xl border border-rose-100/80 bg-gradient-to-br from-white/90 to-rose-50/50 p-4 backdrop-blur-sm">
+          {quote && (
+            <p className="text-[14.5px] leading-relaxed text-zinc-600 line-clamp-3">
+              <Quote size={13} className="inline -mt-0.5 mr-1 text-rose-400" />
+              {quote}
+            </p>
+          )}
+          {profile.fav_teacher && (
+            <p className={`text-[12.5px] text-zinc-500 ${quote ? "mt-2.5" : ""}`}>
+              <span className="font-semibold text-rose-700/80">Fav teacher</span> · {profile.fav_teacher}
+            </p>
+          )}
+          {profile.school_song && (
+            <p className={`flex items-start gap-1.5 text-[12.5px] text-amber-800/90 ${quote || profile.fav_teacher ? "mt-2" : ""}`}>
+              <Music size={13} className="mt-0.5 shrink-0 text-amber-600" />
+              <span className="line-clamp-1">{profile.school_song}</span>
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="relative mt-5 flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-white/80 px-2.5 py-1 text-[11.5px] font-semibold uppercase tracking-wide text-rose-700/70">
+          <Lock size={10} /> Group only
+        </span>
+        <span className="inline-flex items-center gap-1 text-[14px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-600 to-amber-600 opacity-0 translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+          Open profile <ArrowRight size={14} className="text-rose-600" />
+        </span>
+      </div>
+
+      {profile.is_hidden && (
+        <p className="relative mt-3 text-[12px] font-semibold text-amber-700">Hidden from the group (admin)</p>
+      )}
+    </button>
   );
 }
 
@@ -482,7 +581,6 @@ export default function App() {
       .filter(Boolean)
       .map((m) => ({ text: m, by: p.display_name, year: p.school_year })));
   const completed = profiles.filter((p) => p.display_name && p.occupation).length;
-  const cardQuote = (p) => p.embarrassing_moment || p.message_younger_self || p.secret_talent || p.iconic_trend;
 
   /* ---------- actions ---------- */
   const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -605,12 +703,45 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white text-zinc-900 antialiased" style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
         html{scroll-behavior:smooth}
         @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{animation-duration:.01ms!important;transition-duration:.01ms!important} }
         @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
-        @keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(5,150,105,.35)} 100%{box-shadow:0 0 0 14px rgba(5,150,105,0)} }
+        @keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(190,24,93,.4)} 100%{box-shadow:0 0 0 18px rgba(190,24,93,0)} }
         .pulse-live{ animation: pulse-ring 1.6s ease-out; }
+        @keyframes bollywood-shimmer {
+          0%{background-position:200% center}
+          100%{background-position:-200% center}
+        }
+        @keyframes bollywood-sparkle {
+          0%,100%{opacity:.25;transform:scale(.85) rotate(0deg)}
+          50%{opacity:1;transform:scale(1.15) rotate(180deg)}
+        }
+        @keyframes bollywood-float {
+          0%,100%{transform:translateY(0)}
+          50%{transform:translateY(-5px)}
+        }
+        .bollywood-name{font-family:"Playfair Display",Georgia,serif}
+        .bollywood-sparkle{animation:bollywood-sparkle 3s ease-in-out infinite}
+        .bollywood-avatar{animation:bollywood-float 5s ease-in-out infinite}
+        .bollywood-card{
+          position:relative;
+          background:linear-gradient(145deg,#fff 0%,#fffaf5 45%,#fff5f8 100%);
+          box-shadow:0 4px 24px rgba(190,24,93,.08),0 1px 3px rgba(0,0,0,.04);
+        }
+        .bollywood-card::before{
+          content:"";
+          position:absolute;inset:0;border-radius:inherit;padding:2px;
+          background:linear-gradient(90deg,#be185d,#d97706,#a21caf,#f59e0b,#be185d);
+          background-size:300% 100%;
+          animation:bollywood-shimmer 5s linear infinite;
+          -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+          mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+          -webkit-mask-composite:xor;
+          mask-composite:exclude;
+          pointer-events:none;
+        }
+        .bollywood-card:hover::before{animation-duration:2.5s}
       `}</style>
 
       {/* ================= NAV ================= */}
@@ -620,7 +751,10 @@ export default function App() {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-700 text-white">
               <GraduationCap size={17} strokeWidth={2.2} />
             </span>
-            <span className="font-semibold tracking-tight">The Yearbook</span>
+            <div>
+              <span className="font-semibold tracking-tight leading-tight">{SITE_NAME}</span>
+              <span className="hidden sm:inline text-zinc-500 font-normal"> — Class of {CLASS_YEAR}</span>
+            </div>
             <span className="hidden sm:inline-flex items-center gap-1.5 ml-2 rounded-full border border-zinc-200 px-2.5 py-0.5 text-[11px] font-medium text-zinc-500">
               <Lock size={11} /> Private group
             </span>
@@ -683,35 +817,16 @@ export default function App() {
         </Reveal>
       </section>
 
-      {/* ================= INTRO ================= */}
-      <section className="border-t border-zinc-100 bg-zinc-50/60">
-        <div className="mx-auto max-w-6xl px-5 py-20 sm:py-24 grid gap-10 md:grid-cols-3">
-          <Reveal className="md:col-span-1">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">One quiet page,<br />kept by all of us.</h2>
-          </Reveal>
-          <Reveal delay={100} className="md:col-span-2 grid gap-8 sm:grid-cols-2">
-            <div>
-              <span className="grid h-9 w-9 place-items-center rounded-lg bg-white border border-zinc-200 text-emerald-700 mb-3"><BookOpen size={16} /></span>
-              <h3 className="font-semibold">Your page, your words</h3>
-              <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-500">Everyone edits only their own entry — name, nickname, what you're up to now, and the memories worth writing down.</p>
-            </div>
-            <div>
-              <span className="grid h-9 w-9 place-items-center rounded-lg bg-white border border-zinc-200 text-emerald-700 mb-3"><Shield size={16} /></span>
-              <h3 className="font-semibold">Group-only, always</h3>
-              <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-500">Nothing here is public. Only signed-in classmates can see the yearbook — no feeds, no strangers.</p>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
       {/* ================= YEARBOOK ================= */}
-      <section ref={bookRef} className="scroll-mt-20">
+      <section ref={bookRef} className="scroll-mt-20 bg-gradient-to-b from-rose-50/50 via-white to-amber-50/40">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:py-24">
           <Reveal>
             <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-[13px] font-semibold uppercase tracking-widest text-emerald-700">Class of {CLASS_YEAR}</p>
-                <h2 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight">Everyone, as they are now</h2>
+                <p className="inline-flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-widest text-rose-700">
+                  <Star size={12} className="fill-rose-400 text-rose-400" /> Class of {CLASS_YEAR}
+                </p>
+                <h2 className="bollywood-name mt-2 text-3xl sm:text-4xl font-bold tracking-tight">Everyone, as they are now</h2>
               </div>
               <div className="relative">
                 <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -720,72 +835,46 @@ export default function App() {
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search a name or nickname"
                   aria-label="Search classmates"
-                  className="h-11 w-full sm:w-72 rounded-xl border border-zinc-200 bg-white pl-10 pr-4 text-[15px] placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/60 focus:border-emerald-600 transition-shadow"
+                  className="h-11 w-full sm:w-72 rounded-xl border border-rose-200/80 bg-white pl-10 pr-4 text-[15px] placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-400 transition-shadow shadow-sm"
                 />
               </div>
             </div>
           </Reveal>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid gap-7 sm:grid-cols-2">
             {loading &&
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border border-zinc-100 p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-zinc-100 animate-pulse" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3.5 w-2/3 rounded bg-zinc-100 animate-pulse" />
-                      <div className="h-3 w-1/3 rounded bg-zinc-100 animate-pulse" />
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-3xl border border-rose-100 bg-white/80 p-8 shadow-sm">
+                  <div className="flex items-center gap-5">
+                    <div className="h-[4.5rem] w-[4.5rem] rounded-full bg-rose-100 animate-pulse" />
+                    <div className="flex-1 space-y-2.5">
+                      <div className="h-5 w-2/3 rounded-lg bg-rose-100 animate-pulse" />
+                      <div className="h-4 w-1/3 rounded-lg bg-amber-100 animate-pulse" />
+                      <div className="h-3.5 w-1/2 rounded-lg bg-zinc-100 animate-pulse" />
                     </div>
                   </div>
-                  <div className="mt-5 space-y-2">
-                    <div className="h-3 w-full rounded bg-zinc-100 animate-pulse" />
-                    <div className="h-3 w-4/5 rounded bg-zinc-100 animate-pulse" />
+                  <div className="mt-6 rounded-2xl border border-rose-50 bg-rose-50/50 p-4 space-y-2">
+                    <div className="h-3.5 w-full rounded bg-zinc-100 animate-pulse" />
+                    <div className="h-3.5 w-4/5 rounded bg-zinc-100 animate-pulse" />
+                    <div className="h-3 w-3/5 rounded bg-zinc-100 animate-pulse" />
                   </div>
                 </div>
               ))}
 
             {!loading && visible.map((p, i) => (
-              <Reveal key={p.id} delay={Math.min(i * 60, 360)}>
-                <button
-                  onClick={() => setSelected(p)}
-                  className={`group w-full text-left rounded-2xl border bg-white p-6 transition-all duration-300
-                              hover:-translate-y-1 hover:shadow-lg hover:shadow-zinc-200/70 hover:border-zinc-200
-                              ${p.is_hidden ? "border-dashed border-zinc-300 opacity-70" : "border-zinc-100"}
-                              ${pulseId === p.id ? "pulse-live border-emerald-300" : ""}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <ProfileAvatar profile={p} size="sm" />
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate">
-                        {p.display_name || "Unnamed"}
-                        {p.nickname && <span className="text-zinc-400 font-normal"> · "{p.nickname}"</span>}
-                      </p>
-                      <p className="text-[13px] text-zinc-500 truncate">
-                        Class of {CLASS_YEAR}
-                        {p.occupation ? ` · ${p.occupation}` : ""}
-                        {p.current_city ? ` · ${p.current_city}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  {(cardQuote(p) || p.fav_teacher) && (
-                    <div className="mt-4 border-t border-zinc-100 pt-4">
-                      {cardQuote(p) && <p className="text-[13.5px] leading-relaxed text-zinc-500 line-clamp-2">"{cardQuote(p)}"</p>}
-                      {p.fav_teacher && <p className="mt-2 text-[12.5px] text-zinc-400">Fav teacher · {p.fav_teacher}</p>}
-                    </div>
-                  )}
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-zinc-400">
-                      <Lock size={11} /> Group only
-                    </span>
-                    <span className="text-[13px] font-medium text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity">Open →</span>
-                  </div>
-                  {p.is_hidden && <p className="mt-3 text-[12px] font-medium text-amber-600">Hidden from the group (admin)</p>}
-                </button>
+              <Reveal key={p.id} delay={Math.min(i * 80, 480)}>
+                <ProfileCard
+                  profile={p}
+                  index={i}
+                  onSelect={setSelected}
+                  pulseId={pulseId}
+                  classYear={CLASS_YEAR}
+                />
               </Reveal>
             ))}
 
             {!loading && visible.length === 0 && (
-              <div className="sm:col-span-2 lg:col-span-3 rounded-2xl border border-dashed border-zinc-200 p-14 text-center text-zinc-400">
+              <div className="sm:col-span-2 rounded-3xl border border-dashed border-rose-200 bg-white/60 p-14 text-center text-zinc-400">
                 No one matches that search. Maybe they changed their name and fled.
               </div>
             )}
@@ -940,20 +1029,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* ================= PRIVACY ================= */}
-      <section className="border-t border-zinc-100">
-        <div className="mx-auto max-w-3xl px-5 py-20 sm:py-24 text-center">
-          <Reveal>
-            <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700"><Shield size={20} /></span>
-            <h2 className="mt-5 text-2xl sm:text-3xl font-bold tracking-tight">Private by design</h2>
-            <p className="mt-4 text-[15.5px] leading-relaxed text-zinc-500">
-              This page is for our group and no one else. You sign in with a one-time email link, and you can only ever edit your own entry. What you share here stays within the class.
-            </p>
-            <p className="mt-3 text-[13.5px] text-zinc-400">Access is enforced in the database itself, not just the page you're looking at.</p>
-          </Reveal>
-        </div>
-      </section>
-
       {/* ================= FOOTER ================= */}
       <footer className="border-t border-zinc-100 bg-zinc-50/60">
         <div className="mx-auto max-w-6xl px-5 py-14">
@@ -961,19 +1036,46 @@ export default function App() {
             <div className="flex items-center gap-2.5">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-700 text-white"><GraduationCap size={17} /></span>
               <div>
-                <p className="font-semibold tracking-tight leading-tight">The Yearbook</p>
+                <p className="font-semibold tracking-tight leading-tight">{SITE_NAME}</p>
                 <p className="text-[12.5px] text-zinc-400">Class of {CLASS_YEAR}</p>
               </div>
             </div>
-            <nav className="grid grid-cols-2 gap-x-14 gap-y-2 text-[14px]">
-              {[["About", bookRef], ["My details", editRef], ["Privacy", null], ["Help", null]].map(([label, ref]) => (
-                <button key={label} onClick={() => ref && scrollTo(ref)} className="text-left text-zinc-500 hover:text-zinc-900 transition-colors">{label}</button>
-              ))}
+            <nav className="flex flex-col gap-2 text-[14px]">
+              <a
+                href="https://prompt-genie.in/ai-tools"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-left text-zinc-500 hover:text-zinc-900 transition-colors inline-flex items-center gap-1"
+              >
+                Explore AI tools <ExternalLink size={12} className="opacity-60" />
+              </a>
+              <a
+                href="https://prompt-genie.in/portfolio"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-left text-zinc-500 hover:text-zinc-900 transition-colors inline-flex items-center gap-1"
+              >
+                Portfolio <ExternalLink size={12} className="opacity-60" />
+              </a>
             </nav>
           </div>
-          <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-zinc-200/70 pt-6 text-[12.5px] text-zinc-400">
-            <p>© {new Date().getFullYear()} The Yearbook. Kept by the class, for the class.</p>
-            <p>{DEMO ? "Demo mode — nothing leaves your browser" : me ? `Signed in as ${me.email}` : "Group-only access"}</p>
+          <div className="mt-10 flex flex-col gap-4 border-t border-zinc-200/70 pt-6 text-[12.5px] text-zinc-400">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <p>© {new Date().getFullYear()} {SITE_NAME} — Class of {CLASS_YEAR}. Kept by the class, for the class.</p>
+              <p>{DEMO ? "Demo mode — nothing leaves your browser" : me ? `Signed in as ${me.email}` : "Group-only access"}</p>
+            </div>
+            <p>
+              This website was built by{" "}
+              <a
+                href="https://prompt-genie.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-zinc-600 hover:text-emerald-700 transition-colors"
+              >
+                Prompt Genie
+              </a>
+              .
+            </p>
           </div>
         </div>
       </footer>
